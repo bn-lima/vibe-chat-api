@@ -10,3 +10,7 @@ def authenticate_client(email, password):
     token, _ = Token.objects.get_or_create(user=user)
     return token
     
+def logout_user(user):
+    token = Token.objects.get(user=user)
+    token.delete()
+

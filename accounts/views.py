@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework import permissions, status
 from .serializers import RegisterSerializer, LoginSerializer
 from rest_framework.response import Response
+from .auth_services import logout_user
 
 class Register(APIView):
     permission_classes = [permissions.AllowAny]
@@ -22,4 +23,11 @@ class Login(APIView):
         token = serializer.save()
 
         return Response({"auth_token": token.key})
+    
+class Logout(APIView):
+    permission_classes = [permissions.IsAuthenticated]
 
+    def delete(self, request, *args, **kwargs):
+        logout_user(request.user)
+
+        return Response({"detail": "The logout was sucessfully"}, status=status.HTTP_204_NO_CONTENT)
