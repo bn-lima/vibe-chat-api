@@ -33,6 +33,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'accounts'
 ]
 
 MIDDLEWARE = [
@@ -116,3 +118,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'static'
+
+# Users
+
+AUTH_USER_MODEL = 'accounts.Account'
