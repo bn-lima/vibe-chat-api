@@ -13,8 +13,7 @@ def authenticate_client(email, password):
     return token
     
 def logout_user(user):
-    token = Token.objects.get(user=user)
-    token.delete()
+    Token.objects.filter(user=user).delete()
 
 def has_many_reset_tokens(user):
     

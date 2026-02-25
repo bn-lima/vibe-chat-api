@@ -93,3 +93,27 @@ class ChangePasswordSerializer(serializers.Serializer):
         logout_user(user)
 
         ResetToken.objects.filter(user=user, active=True).update(active=False)
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.CharField(required=True, max_length=254)
+
+    def validate(self, data):
+        email = data['email']
+
+        try:
+            user = Account.objects.get(email=email)
+        except Account.DoesNotExist:
+            raise serializers.ValidationError("Invalid email")
+        
+        if has_many_reset_tokens(user):
+            raise serializers.ValidationError("You have too many active reset tokens. Please click the link sent to your email or wait one hour")
+        
+        data['user'] = user
+        return data
+    
+    def save(self, **kwargs):
+        user = self.validated_data.get('user')
+
+        reset_token = ResetToken.objects.create(user=user)
+
+        send_reset_token_by_email(user.email, reset_token.key)
