@@ -11,25 +11,25 @@ class Account(AbstractUser):
     REQUIRED_FIELDS =  ('username',)
 
     def __str__(self):
-        return f"{self.username} - {self.email}"
+        return f"{self.username} - {self.email}" # Representação do usuário
     
 class ResetToken(models.Model):
-    user = models.ForeignKey(Account, on_delete=models.CASCADE)
-    key = models.UUIDField(default=uuid.uuid4)
-    expiration = models.DateTimeField()
-    active = models.BooleanField(default=True)
+    user = models.ForeignKey(Account, on_delete=models.CASCADE) # Usuário dono do token
+    key = models.UUIDField(default=uuid.uuid4) # Chave única do token
+    expiration = models.DateTimeField() # Data/hora de expiração
+    active = models.BooleanField(default=True) # Token ativo ou não
 
     def save(self, *args, **kwargs):
         if not self.expiration:
-            self.expiration = timezone.now() + timedelta(minutes=60)
+            self.expiration = timezone.now() + timedelta(minutes=60) # Expira em 1h
         return super().save(*args, **kwargs)
     
     def is_token_expired(self):
-        return self.expiration < timezone.now()
+        return self.expiration < timezone.now() # Verifica se expirou
     
     def mark_token_as_expired(self):
-        self.active = False
+        self.active = False # Marca como inativo
         self.save()
 
     def __str__(self):
-        return f"{self.key}"
+        return f"{self.key}" # Representação do token

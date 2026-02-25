@@ -4,7 +4,7 @@ from .serializers import RegisterSerializer, LoginSerializer, ChangePasswordRequ
 from rest_framework.response import Response
 from .auth_services import logout_user, validate_reset_token
 
-class Register(APIView):
+class Register(APIView): # Cria um novo usuário
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -14,7 +14,7 @@ class Register(APIView):
 
         return Response({"detail": "Your account has been created sucessfully"}, status=status.HTTP_201_CREATED)
 
-class Login(APIView):
+class Login(APIView): # Autentica usuário e retorna token
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -24,7 +24,7 @@ class Login(APIView):
 
         return Response({"auth_token": token.key})
     
-class Logout(APIView):
+class Logout(APIView): # Logout do usuário, removendo o token
     permission_classes = [permissions.IsAuthenticated]
 
     def delete(self, request, *args, **kwargs):
@@ -32,7 +32,7 @@ class Logout(APIView):
 
         return Response({"detail": "The logout was sucessfully"}, status=status.HTTP_204_NO_CONTENT)
     
-class ChangePasswordRequest(APIView):
+class ChangePasswordRequest(APIView): # Gera token de reset de senha para usuário logado
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
@@ -44,7 +44,7 @@ class ChangePasswordRequest(APIView):
 
         return Response({"detail": "An email with a reset link has been sent to you"}, status=status.HTTP_200_OK)
     
-class ChangePassword(APIView):
+class ChangePassword(APIView): # Altera a senha usando token de reset
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -67,7 +67,7 @@ class ChangePassword(APIView):
 
         return Response({"detail": "Your password has been updated successfully"}, status=status.HTTP_200_OK)
     
-class ForgotPassword(APIView):
+class ForgotPassword(APIView): # Solicita reset de senha via email (usuário não logado)
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):

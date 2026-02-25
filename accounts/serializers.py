@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import Account, ResetToken
 from .auth_services import authenticate_client, has_many_reset_tokens, logout_user
 from .email import send_reset_token_by_email
-class RegisterSerializer(serializers.ModelSerializer):
+class RegisterSerializer(serializers.ModelSerializer): # Serializer para criar novo usuário
     confirm_password = serializers.CharField(required=True, max_length=128, min_length=8)
     password = serializers.CharField(required=True, max_length=128, min_length=8)
     class Meta:
@@ -31,7 +31,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         
         return user
     
-class LoginSerializer(serializers.Serializer):
+class LoginSerializer(serializers.Serializer): # Serializer para login e geração de token
     email = serializers.EmailField(required=True, max_length=254)
     password = serializers.CharField(required=True, max_length=128, min_length=8)
 
@@ -51,7 +51,7 @@ class LoginSerializer(serializers.Serializer):
         token = self.validated_data.get('token')
         return token
     
-class ChangePasswordRequestSerializer(serializers.Serializer):
+class ChangePasswordRequestSerializer(serializers.Serializer): # Solicita token de reset para usuário logado
 
     def validate(self, data):
         user = self.context.get('user')
@@ -68,7 +68,7 @@ class ChangePasswordRequestSerializer(serializers.Serializer):
 
         send_reset_token_by_email(user.email, reset_token.key)
         
-class ChangePasswordSerializer(serializers.Serializer):
+class ChangePasswordSerializer(serializers.Serializer): # Altera senha usando token de reset
     new_password = serializers.CharField(required=True, max_length=128, min_length=8)
     confirm_new_password = serializers.CharField(required=True, max_length=128, min_length=8)
 
@@ -94,7 +94,7 @@ class ChangePasswordSerializer(serializers.Serializer):
 
         ResetToken.objects.filter(user=user, active=True).update(active=False)
 
-class ForgotPasswordSerializer(serializers.Serializer):
+class ForgotPasswordSerializer(serializers.Serializer): # Solicita reset de senha para usuário não logado
     email = serializers.CharField(required=True, max_length=254)
 
     def validate(self, data):
