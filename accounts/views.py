@@ -67,7 +67,7 @@ class ChangePassword(APIView):
 
         return Response({"detail": "Your password has been updated successfully"}, status=status.HTTP_200_OK)
     
-class ForgetPassword(APIView):
+class ForgotPassword(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
