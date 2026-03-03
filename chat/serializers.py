@@ -19,3 +19,12 @@ class ChatRoomSerializers(serializers.ModelSerializer):
         )
 
         return chat_room
+    
+class ChatRoomsSerializer(serializers.ModelSerializer): # Serializer responsável por retornar os dados da sala e a quantidade total de participantes
+    members_quantity = serializers.SerializerMethodField()
+    class Meta():
+        model = ChatRoom
+        exclude = ['owner', 'room_password',]
+
+    def get_members_quantity(self, obj):
+        return obj.members.count() + 1 # Número de membros contando com o dono da sala

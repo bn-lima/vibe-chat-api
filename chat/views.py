@@ -1,7 +1,10 @@
 from rest_framework.views import APIView
 from rest_framework import permissions
-from .serializers import ChatRoomSerializers
+from .serializers import ChatRoomSerializers, ChatRoomsSerializer
 from rest_framework.response import Response
+from rest_framework.generics import ListAPIView
+from .pagination import ChatRoomsPagination
+from .models import ChatRoom
 
 class CreateChatRoom(APIView): # Cria uma nova sala de conversa
     permission_classes = [permissions.IsAuthenticated]
@@ -14,3 +17,9 @@ class CreateChatRoom(APIView): # Cria uma nova sala de conversa
         serializer.save()
 
         return Response({"detail": "Your channel has created successfully"})
+
+class ChatRooms(ListAPIView): #Mostra todas as salas de conversa disponíveis
+    queryset = ChatRoom.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ChatRoomsSerializer
+    pagination_class = ChatRoomsPagination
