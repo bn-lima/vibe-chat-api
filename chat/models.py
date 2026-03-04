@@ -1,5 +1,6 @@
 from django.db import models
 from accounts.models import Account
+from .validators import CHAT_ROOM_VALIDATOR
 
 class ChatRoom(models.Model):
     owner = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="channels")
@@ -7,7 +8,7 @@ class ChatRoom(models.Model):
     subject = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     members = models.ManyToManyField(Account, related_name="joined_channels")
-    room_password = models.CharField(max_length=10, blank=True)
+    room_password = models.CharField(max_length=10, blank=True, null=True, validators=[CHAT_ROOM_VALIDATOR])
 
     def __str__(self):
         return f"{self.channel_name} ({self.subject}) - {self.owner}"

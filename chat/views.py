@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
-from rest_framework import permissions
-from .serializers import ChatRoomSerializers, ChatRoomsSerializer
+from rest_framework import permissions, status
+from .serializers import CreateChatRoomSerializer, ChatRoomsSerializer
 from rest_framework.response import Response
 from rest_framework.generics import ListAPIView
 from .pagination import ChatRoomsPagination
@@ -13,11 +13,11 @@ class CreateChatRoom(APIView): # Cria uma nova sala de conversa
     def post(self, request, *args, **kwargs):
         user = request.user
 
-        serializer = ChatRoomSerializers(data=request.data, context={"user": user})
+        serializer = CreateChatRoomSerializer(data=request.data, context={"user": user})
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response({"detail": "Your channel has created successfully"})
+        return Response({"detail": "Your channel has created successfully"}, status=status.HTTP_201_CREATED)
 
 class ChatRooms(ListAPIView): #Mostra todas as salas de conversa disponíveis
     queryset = ChatRoom.objects.all()
@@ -35,6 +35,26 @@ class ChatRooms(ListAPIView): #Mostra todas as salas de conversa disponíveis
             search_query = SearchQuery(query_params) # Converte o termo pesquisado em uma consulta compatível com o mecanismo de busca do PostgreSQL
 
             queryset = self.queryset.annotate(rank=SearchRank(search_vector, search_query)).filter(rank__gte=0.1).order_by("-rank") # Retorna apenas resultados com relevância mínima e ordena do mais relevante para o menos relevante
+
+            return queryset
+        return self.queryset
+    
+class PublicChatRooms(ListAPIView): # Mostra todas as salas de conversa sem senha
+    queryset = ChatRoom.objects.filter(room_password=None)
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ChatRoomsSerializer
+    pagination_class = ChatRoomsPagination
+    
+    def get_queryset(self):
+        query_params = self.request.query_params.get("search")
+
+        if query_params:
+
+            search_vector = SearchVector("channel_name", weight="A") + SearchVector("subject", weight="B")
+
+            search_query = SearchQuery(query_params)
+
+            queryset = self.queryset.annotate(rank=SearchRank(search_vector, search_query)).filter(rank__gte=0.1).order_by("-rank")
 
             return queryset
         return self.queryset
