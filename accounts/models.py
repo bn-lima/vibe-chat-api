@@ -6,6 +6,7 @@ from django.utils import timezone
 
 class Account(AbstractUser):
     email = models.EmailField(unique=True, max_length=254)
+    username = models.EmailField(max_length=150, unique=True) # Username único para cada usuário
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS =  ('username',)

@@ -1,8 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework import permissions, status
-from .serializers import CreateChatRoomSerializer, ChatRoomsSerializer
+from .serializers import CreateChatRoomSerializer, ChatRoomsSerializer, ChatRoomDetailSerializer
 from rest_framework.response import Response
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from .pagination import ChatRoomsPagination
 from .models import ChatRoom
 from django.contrib.postgres.search import SearchQuery, SearchVector, SearchRank
@@ -58,3 +58,8 @@ class PublicChatRooms(ListAPIView): # Mostra todas as salas de conversa sem senh
 
             return queryset
         return self.queryset
+class ChatRoomDetail(RetrieveAPIView): # Mostra os detalhes de uma sala de conversa expecífica
+    queryset = ChatRoom.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ChatRoomDetailSerializer
+    

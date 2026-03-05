@@ -25,7 +25,20 @@ class ChatRoomsSerializer(serializers.ModelSerializer): # Serializer responsáve
     members_quantity = serializers.SerializerMethodField()
     class Meta():
         model = ChatRoom
-        exclude = ['owner', 'room_password',]
+        exclude = ["owner", "room_password", "members"]
 
     def get_members_quantity(self, obj):
         return obj.members.count() # Número de membros da sala
+    
+class ChatRoomDetailSerializer(serializers.ModelSerializer):
+    owner_name = serializers.SerializerMethodField()
+    members_quantity = serializers.SerializerMethodField()
+    class Meta:
+        model = ChatRoom
+        exclude = ("room_password", "owner", "members")
+
+    def get_owner_name(self, obj):
+        return obj.owner.username
+    
+    def get_members_quantity(self, obj):
+        return obj.members.count()
