@@ -1,11 +1,12 @@
 from rest_framework.views import APIView
 from rest_framework import permissions, status
-from .serializers import CreateChatRoomSerializer, ChatRoomsSerializer, ChatRoomDetailSerializer
+from .serializers import CreateChatRoomSerializer, ChatRoomsSerializer, ChatRoomDetailSerializer, JoinChatRoomSerializer
 from rest_framework.response import Response
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from .pagination import ChatRoomsPagination
 from .models import ChatRoom
 from django.contrib.postgres.search import SearchQuery, SearchVector, SearchRank
+from .chat_services import get_chat_room_by_id, is_user_in_room
 
 class CreateChatRoom(APIView): # Cria uma nova sala de conversa
     permission_classes = [permissions.IsAuthenticated]
@@ -62,4 +63,23 @@ class ChatRoomDetail(RetrieveAPIView): # Mostra os detalhes de uma sala de conve
     queryset = ChatRoom.objects.all()
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ChatRoomDetailSerializer
+
+class JoinChatRoom(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk, *args, **kwargs):
+        user = request.user
+        chat_room = get_chat_room_by_id(pk)
+
+        if not chat_room:
+            return Response({"detail": "Chat room not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        if is_user_in_room(user, chat_room):
+            return Response({"detail": "You are already in this room"}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = JoinChatRoomSerializer(data=request.data, context={"user":user, "chat_room":chat_room})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response({"detail": "Successfully joined the chat."}, status=status.HTTP_200_OK)
     

@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import ChatRoom
+from .validators import CHAT_ROOM_VALIDATOR
 
 class CreateChatRoomSerializer(serializers.ModelSerializer):
     class Meta():
@@ -42,3 +43,20 @@ class ChatRoomDetailSerializer(serializers.ModelSerializer):
     
     def get_members_quantity(self, obj):
         return obj.members.count()
+    
+class JoinChatRoomSerializer(serializers.Serializer):
+    room_password = serializers.CharField(max_length=10, validators=[CHAT_ROOM_VALIDATOR])
+
+    def validate(self, data):
+        chat_room = self.context.get("chat_room")
+
+        if chat_room.room_password and data["room_password"] != chat_room.room_password:
+            raise serializers.ValidationError("Invalid password")
+
+        return data
+     
+    def save(self, **kwargs):
+        user = self.context.get("user")
+        chat_room = self.context.get("chat_room")
+
+        chat_room.members.add(user)
