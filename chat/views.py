@@ -101,3 +101,27 @@ class LeaveChatRoom(APIView):
         serializer.save()
 
         return Response({"detail": "You left the room"}, status=status.HTTP_200_OK)
+    
+class MyChatRooms(ListAPIView): # Mostra uma lista de salas onde o usuário está presente
+    queryset = ChatRoom.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ChatRoomsSerializer
+    pagination_class = ChatRoomsPagination
+
+    def get_queryset(self):
+        query_params = self.request.query_params.get("search")
+        user = self.request.user
+
+        queryset = user.joined_channels.all() # Todas as salas que o usuário participa
+
+        if query_params:
+
+            search_vector = SearchVector("channel_name", weight="A") + SearchVector("subject", weight="B")
+
+            search_query = SearchQuery(query_params)
+
+            queryset = queryset.annotate(rank=SearchRank(search_vector, search_query)).filter(rank__gte=0.1).order_by("-rank")
+
+        return queryset
+
+        
