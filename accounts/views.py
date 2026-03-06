@@ -18,7 +18,7 @@ class Login(APIView): # Autentica usuário e retorna token
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
-        serializer = LoginSerializer(data=request.data, required=False)
+        serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         token = serializer.save()
 

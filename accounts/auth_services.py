@@ -2,6 +2,8 @@ from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from .models import ResetToken
 import uuid
+from . models import Account
+import random
 
 def authenticate_client(email, password):
     # Autentica usuário pelo email e senha e retorna um token. 
@@ -42,3 +44,26 @@ def validate_reset_token(str_reset_token):
         return None
     
     return reset_token
+
+def username_has_discriminator(username, discriminator):
+    users = Account.objects.filter(username=username)
+
+    for account in users:
+        if account.discriminator == discriminator:
+            return True
+        
+    return False
+
+def create_discriminator(username):
+
+    while True:
+
+        discriminator = ""
+
+        for i in range(0,4):
+            discriminator = str(random.randint(0,9)) + discriminator
+
+        if username_has_discriminator(username, discriminator):
+            continue
+
+        return f"#{discriminator}"

@@ -3,8 +3,8 @@ from .models import Account, ResetToken
 
 @admin.register(Account)
 class AccountAdmin(admin.ModelAdmin):
-    list_display = ['username', 'email',]
-    search_fields = ['username', 'email',]
+    list_display = ['username', 'email', 'discriminator']
+    search_fields = ['username', 'email', 'discriminator']
 
 @admin.register(ResetToken)
 class ResetTokenAdmin(admin.ModelAdmin):
