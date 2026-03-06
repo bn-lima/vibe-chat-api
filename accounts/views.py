@@ -13,12 +13,11 @@ class Register(APIView):
         serializer.save()
 
         return Response({"detail": "Your account has been created sucessfully"}, status=status.HTTP_201_CREATED)
-
 class Login(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
-        serializer = LoginSerializer(data=request.data, required=False)
+        serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         token = serializer.save()
 
