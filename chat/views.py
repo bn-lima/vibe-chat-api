@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework import permissions, status
-from .serializers import CreateChatRoomSerializer, ChatRoomsSerializer, ChatRoomDetailSerializer, JoinChatRoomSerializer
+from .serializers import CreateChatRoomSerializer, ChatRoomsSerializer, ChatRoomDetailSerializer, JoinChatRoomSerializer, LeaveChatRoomSerializer
 from rest_framework.response import Response
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from .pagination import ChatRoomsPagination
@@ -64,17 +64,17 @@ class ChatRoomDetail(RetrieveAPIView): # Mostra os detalhes de uma sala de conve
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ChatRoomDetailSerializer
 
-class JoinChatRoom(APIView):
+class JoinChatRoom(APIView): # Permite que o usuário entre em uma sala de conversa expecífica
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk, *args, **kwargs):
         user = request.user
         chat_room = get_chat_room_by_id(pk)
 
-        if not chat_room:
+        if not chat_room: # Verifica se id passado realmente existe
             return Response({"detail": "Chat room not found"}, status=status.HTTP_404_NOT_FOUND)
         
-        if is_user_in_room(user, chat_room):
+        if is_user_in_room(user, chat_room): # Verifica se o usuário já está na sala
             return Response({"detail": "You are already in this room"}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = JoinChatRoomSerializer(data=request.data, context={"user":user, "chat_room":chat_room})
@@ -83,3 +83,21 @@ class JoinChatRoom(APIView):
 
         return Response({"detail": "Successfully joined the chat."}, status=status.HTTP_200_OK)
     
+class LeaveChatRoom(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk, *args, **kwargs):
+        user = request.user
+        chat_room = get_chat_room_by_id(pk)
+
+        if not chat_room:
+            return Response({"detail": "Chat room not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if not is_user_in_room(user, chat_room):
+            return Response({"detail": "You are not a member of this room"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        serializer = LeaveChatRoomSerializer(data={}, context={"user":user, "chat_room":chat_room})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response({"detail": "You left the room"}, status=status.HTTP_200_OK)

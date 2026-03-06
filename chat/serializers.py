@@ -39,12 +39,12 @@ class ChatRoomDetailSerializer(serializers.ModelSerializer):
         exclude = ("room_password", "owner", "members")
 
     def get_owner_name(self, obj):
-        return obj.owner.username
+        return obj.owner.username # RETORNAR O USERNAME JUNTO DO DISCRIMINATOR DO USUÁRIO DEPOIS
     
-    def get_members_quantity(self, obj):
+    def get_members_quantity(self, obj):    
         return obj.members.count()
     
-class JoinChatRoomSerializer(serializers.Serializer):
+class JoinChatRoomSerializer(serializers.Serializer): # Serializer responsável por verificar se a senha da sala está correta e permitir a entrada do usuário
     room_password = serializers.CharField(max_length=10, validators=[CHAT_ROOM_VALIDATOR])
 
     def validate(self, data):
@@ -60,3 +60,20 @@ class JoinChatRoomSerializer(serializers.Serializer):
         chat_room = self.context.get("chat_room")
 
         chat_room.members.add(user)
+
+class LeaveChatRoomSerializer(serializers.Serializer):
+
+    def validate(self, data):
+        user = self.context.get("user")
+        chat_room = self.context.get("chat_room")
+
+        if chat_room.owner == user:
+            raise serializers.ValidationError("You cannot leave your own room")
+        
+        return data
+
+    def save(self, **kwargs):
+        user = self.context.get("user")
+        chat_room = self.context.get("chat_room")
+
+        chat_room.members.remove(user)
