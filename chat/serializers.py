@@ -61,13 +61,13 @@ class JoinChatRoomSerializer(serializers.Serializer): # Serializer responsável 
 
         chat_room.members.add(user)
 
-class LeaveChatRoomSerializer(serializers.Serializer):
+class LeaveChatRoomSerializer(serializers.Serializer): # Serializer responsável por remover o usuário da sala de conversa
 
     def validate(self, data):
         user = self.context.get("user")
         chat_room = self.context.get("chat_room")
 
-        if chat_room.owner == user:
+        if chat_room.owner == user: # Verifica se o usuário é o dono da sala
             raise serializers.ValidationError("You cannot leave your own room")
         
         return data
@@ -76,4 +76,20 @@ class LeaveChatRoomSerializer(serializers.Serializer):
         user = self.context.get("user")
         chat_room = self.context.get("chat_room")
 
-        chat_room.members.remove(user)
+        chat_room.members.remove(user) # Remove o usuário da sala
+
+class DeleteChatRoomSerializer(serializers.Serializer):
+    delete_confirmation = serializers.CharField(max_length=100, required=True) # Permite que o usuário prossiga com a exclusão da sala de conversa ao digitar o nome exato da sala
+
+    def validate(self, data):
+        delete_confirmation = data['delete_confirmation']
+        chat_room = self.context.get("chat_room")
+        user = self.context.get("user")
+        
+        if chat_room.owner != user: # Verifica se o usuário logado é o dono da sala
+            raise serializers.ValidationError("You are not the owner of this chat room")
+
+        if delete_confirmation != chat_room.channel_name: # verifica se o a confirmação de exclusão é válida
+            raise serializers.ValidationError({"delete_confirmation": "Type the correct name of the chat room if you want to delete it"})
+        
+        return data

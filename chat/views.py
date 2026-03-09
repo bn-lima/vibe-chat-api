@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework import permissions, status
-from .serializers import CreateChatRoomSerializer, ChatRoomsSerializer, ChatRoomDetailSerializer, JoinChatRoomSerializer, LeaveChatRoomSerializer
+from .serializers import CreateChatRoomSerializer, ChatRoomsSerializer, ChatRoomDetailSerializer, JoinChatRoomSerializer, LeaveChatRoomSerializer, DeleteChatRoomSerializer
 from rest_framework.response import Response
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from .pagination import ChatRoomsPagination
@@ -59,12 +59,12 @@ class PublicChatRooms(ListAPIView): # Mostra todas as salas de conversa sem senh
 
             return queryset
         return self.queryset
-class ChatRoomDetail(RetrieveAPIView): # Mostra os detalhes de uma sala de conversa expecífica
+class ChatRoomDetail(RetrieveAPIView): # Mostra os detalhes de uma sala de conversa específica
     queryset = ChatRoom.objects.all()
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ChatRoomDetailSerializer
 
-class JoinChatRoom(APIView): # Permite que o usuário entre em uma sala de conversa expecífica
+class JoinChatRoom(APIView): # Permite que o usuário entre em uma sala de conversa específica
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk, *args, **kwargs):
@@ -123,5 +123,19 @@ class MyChatRooms(ListAPIView): # Mostra uma lista de salas onde o usuário est�
             queryset = queryset.annotate(rank=SearchRank(search_vector, search_query)).filter(rank__gte=0.1).order_by("-rank")
 
         return queryset
+class DeleteChatRoom(APIView):
+    permission_classes = [permissions.IsAuthenticated]
 
-        
+    def delete(self, request, pk, *args, **kwargs):
+        user = request.user
+        chat_room = get_chat_room_by_id(pk)
+
+        if not chat_room:
+            return Response({"detail": "Chat room not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = DeleteChatRoomSerializer(data=request.data, context={"user":user, "chat_room":chat_room})
+        serializer.is_valid(raise_exception=True)
+
+        chat_room.delete() # Deleta a sala de conversa
+
+        return Response(status=status.HTTP_204_NO_CONTENT)

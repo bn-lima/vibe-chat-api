@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .views import CreateChatRoom, ChatRooms, PublicChatRooms, ChatRoomDetail, JoinChatRoom, LeaveChatRoom, MyChatRooms
+from .views import CreateChatRoom, ChatRooms, PublicChatRooms, ChatRoomDetail, JoinChatRoom, LeaveChatRoom, MyChatRooms, DeleteChatRoom
 
 urlpatterns = [
     path("rooms/", ChatRooms.as_view(), name="rooms"), # Lista as salas disponíveis
@@ -8,8 +8,9 @@ urlpatterns = [
     path("myrooms/", MyChatRooms.as_view(), name="myrooms"), # Mostra todas as salas que o usuário participa
 
     path("<int:pk>/", include([
-        path("detail/", ChatRoomDetail.as_view(), name="detail"), # Mostra os detalhes de uma sala expecífica (passando seu id pra view)
-        path("join/", JoinChatRoom.as_view(), name="join"), # Entra em uma sala expecífica (passando seu id pra view)
-        path("leave/", LeaveChatRoom.as_view(), name="leave") # Sai de uma sala expecífica
+        path("detail/", ChatRoomDetail.as_view(), name="detail"), # Mostra os detalhes de uma sala específica (passando seu id pra view)
+        path("join/", JoinChatRoom.as_view(), name="join"), # Entra em uma sala específica (passando seu id pra view)
+        path("leave/", LeaveChatRoom.as_view(), name="leave"), # Sai de uma sala específica
+        path("delete/", DeleteChatRoom.as_view(), name="delete") # Deleta uma sala de conversa específica
     ])),
 ]
