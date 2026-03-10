@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework import permissions, status
-from .serializers import CreateChatRoomSerializer, ChatRoomsSerializer, ChatRoomDetailSerializer, JoinChatRoomSerializer, LeaveChatRoomSerializer, DeleteChatRoomSerializer
+from .serializers import CreateChatRoomSerializer, ChatRoomsSerializer, ChatRoomDetailSerializer, JoinChatRoomSerializer, LeaveChatRoomSerializer, DeleteChatRoomSerializer, ShowChatRoomSerializer, SendMessageSerialzer
 from rest_framework.response import Response
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from .pagination import ChatRoomsPagination
@@ -139,3 +139,32 @@ class DeleteChatRoom(APIView):
         chat_room.delete() # Deleta a sala de conversa
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+class ShowChatRoom(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk, *args, **kwargs):
+        chat_room = get_chat_room_by_id(pk)
+
+        if not chat_room:
+            return Response({"detail": "Chat room not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = ShowChatRoomSerializer(chat_room)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class SendMessage(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk, *args, **kwargs):
+        chat_room = get_chat_room_by_id(pk)
+    
+        if not chat_room:
+            return Response({"detail": "Chat room not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = SendMessageSerialzer(data=request.data, context={"user": request.user, "chat_room": chat_room})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        response_serializer = ShowChatRoomSerializer(chat_room)
+        return Response(response_serializer.data)

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ChatRoom
+from .models import ChatRoom, ChatMessage
 from .validators import CHAT_ROOM_VALIDATOR
 
 class CreateChatRoomSerializer(serializers.ModelSerializer):
@@ -93,3 +93,34 @@ class DeleteChatRoomSerializer(serializers.Serializer):
             raise serializers.ValidationError({"delete_confirmation": "Type the correct name of the chat room if you want to delete it"})
         
         return data
+    
+class MessagesSerializer(serializers.ModelSerializer):
+    username = serializers.SerializerMethodField() # Mostra o username do usuário junto das suas mensagens
+    class Meta:
+        model = ChatMessage
+        exclude = ("channel",)
+
+    def get_username(self, obj):
+        return f"{obj.author.username}"
+class ShowChatRoomSerializer(serializers.ModelSerializer): # Serializer responsável por mostrar a sala com todas as mensagens
+    messages = MessagesSerializer(many=True, read_only=True) # Usa o serializer MessagesSerializer como campo para mostrar as mensagens da sala
+    class Meta:
+        model = ChatRoom
+        fields = ("channel_name", "messages",)
+
+class SendMessageSerialzer(serializers.ModelSerializer): # Serializer responsável por criar um objeto mensagem em uma sala específica
+    class Meta:
+        model = ChatMessage
+        exclude = ("channel", "author",)
+    
+    def create(self, validated_data):
+        user = self.context.get("user")
+        chat_room = self.context.get("chat_room")
+
+        message = ChatMessage.objects.create( # Cria a mensagem na sala e define o usuário logado como autor
+            author=user,
+            channel=chat_room,
+            **validated_data
+        )
+
+        return message
