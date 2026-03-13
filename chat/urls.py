@@ -15,7 +15,7 @@ urlpatterns = [
 
         path("delete/", DeleteChatRoom.as_view(), name="delete"), # Deleta uma sala de conversa específica
 
-        path("show/", ShowChatRoom.as_view(), name="show"), # Mostra uma sala específica com todas as suas mensagens
+        path("chat/", ShowChatRoom.as_view(), name="chat"), # Mostra uma sala específica com todas as suas mensagens
         path("send/", SendMessage.as_view(), name="send")
     ])),
 ]

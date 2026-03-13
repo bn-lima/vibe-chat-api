@@ -36,7 +36,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'accounts',
     'rest_framework.authtoken',
-    'chat'
+    'chat',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -134,3 +135,7 @@ REST_FRAMEWORK = {
 # EMAIL
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# ASGI
+
+ASGI_APPLICATION = "vibe_chat.asgi.application"

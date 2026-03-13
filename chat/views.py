@@ -1,12 +1,14 @@
 from rest_framework.views import APIView
 from rest_framework import permissions, status
-from .serializers import CreateChatRoomSerializer, ChatRoomsSerializer, ChatRoomDetailSerializer, JoinChatRoomSerializer, LeaveChatRoomSerializer, DeleteChatRoomSerializer, ShowChatRoomSerializer, SendMessageSerialzer
+from .serializers import CreateChatRoomSerializer, ChatRoomsSerializer, ChatRoomDetailSerializer, JoinChatRoomSerializer, LeaveChatRoomSerializer, DeleteChatRoomSerializer, ShowChatRoomSerializer, SendMessageSerialzer, MessagesSerializer
 from rest_framework.response import Response
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from .pagination import ChatRoomsPagination
 from .models import ChatRoom
 from django.contrib.postgres.search import SearchQuery, SearchVector, SearchRank
 from .chat_services import get_chat_room_by_id, is_user_in_room
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 class CreateChatRoom(APIView): # Cria uma nova sala de conversa
     permission_classes = [permissions.IsAuthenticated]
@@ -140,7 +142,7 @@ class DeleteChatRoom(APIView):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
     
-class ShowChatRoom(APIView):
+class ShowChatRoom(APIView): #Excluir isso aqui ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, pk, *args, **kwargs):
@@ -152,7 +154,7 @@ class ShowChatRoom(APIView):
         serializer = ShowChatRoomSerializer(chat_room)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+     #UNIFICAR A VIEW DE MOSTRAR E ENVIAR MENSAGENS
 class SendMessage(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -164,7 +166,22 @@ class SendMessage(APIView):
         
         serializer = SendMessageSerialzer(data=request.data, context={"user": request.user, "chat_room": chat_room})
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+
+        if not request.data.get("subject"):
+            response_serializer = ShowChatRoomSerializer(chat_room)
+            return Response(response_serializer.data)
+
+        message = serializer.save()
+
+        channel_layer = get_channel_layer()
+
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{pk}",
+            {
+                "type": "send_message",
+                "message": MessagesSerializer(message).data
+            }
+        )
 
         response_serializer = ShowChatRoomSerializer(chat_room)
         return Response(response_serializer.data)
