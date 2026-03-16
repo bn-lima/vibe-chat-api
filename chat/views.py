@@ -7,8 +7,7 @@ from .pagination import ChatRoomsPagination
 from .models import ChatRoom
 from django.contrib.postgres.search import SearchQuery, SearchVector, SearchRank
 from .chat_services import get_chat_room_by_id, is_user_in_room
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
+from .async_services import send_message_to_websocket
 
 class CreateChatRoom(APIView): # Cria uma nova sala de conversa
     permission_classes = [permissions.IsAuthenticated]
@@ -158,22 +157,16 @@ class SendMessage(APIView): # View responsável por enviar mensagens em uma sala
         serializer.is_valid(raise_exception=True)
 
         # Caso não exista message_content, retorna todas as mensagens da sala
-        if not request.data.get("message_content"):
+        if not serializer.validated_data.get("message_content"):
             response_serializer = ShowChatRoomSerializer(chat_room)
             return Response(response_serializer.data)
-        # Pega o channel layer do Django Channels
+
         message = serializer.save()
 
-        channel_layer = get_channel_layer()
+
+        message_json = MessagesSerializer(message).data
         # Envia a nova mensagem para todos os clientes conectados via WebSocket
-        async_to_sync(channel_layer.group_send)(
-            f"chat_{pk}",
-            {
-                "type": "send_message",
-                "message": MessagesSerializer(message).data
-            }
-        )
+        send_message_to_websocket(pk, message_json)
 
         # Retorna apenas a mensagem recém-criada como resposta da API
-        response_serializer = MessagesSerializer(message)
-        return Response(response_serializer.data)
+        return Response(message_json, status=status.HTTP_200_OK)
