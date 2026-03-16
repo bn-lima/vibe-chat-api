@@ -52,11 +52,11 @@ class PublicChatRooms(ListAPIView): # Mostra todas as salas de conversa sem senh
         query_params = self.request.query_params.get("search")
 
         if query_params:
-
+            # Define os campos que serão usados na busca e seus pesos de relevância
             search_vector = SearchVector("channel_name", weight="A") + SearchVector("subject", weight="B")
-
+            # Converte o termo pesquisado em uma query compatível com o PostgreSQL
             search_query = SearchQuery(query_params)
-
+            # Calcula a relevância da busca e retorna apenas resultados relevantes
             queryset = self.queryset.annotate(rank=SearchRank(search_vector, search_query)).filter(rank__gte=0.1).order_by("-rank")
 
             return queryset
@@ -91,13 +91,13 @@ class LeaveChatRoom(APIView):
     def post(self, request, pk, *args, **kwargs):
         user = request.user
         chat_room = get_chat_room_by_id(pk)
-
+        # Verifica se a sala de chat existe
         if not chat_room:
             return Response({"detail": "Chat room not found"}, status=status.HTTP_404_NOT_FOUND)
-
+        # Verifica se o usuário realmente faz parte da sala
         if not is_user_in_room(user, chat_room):
-            return Response({"detail": "You are not a member of this room"}, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response({"detail": "You are not a member of this room"}, status=status.HTTP_403_FORBIDDEN)
+        # Serializer responsável por remover o usuário da sala
         serializer = LeaveChatRoomSerializer(data={}, context={"user":user, "chat_room":chat_room})
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -153,18 +153,19 @@ class SendMessage(APIView): # View responsável por enviar mensagens em uma sala
         
         if not is_user_in_room(request.user, chat_room):
             return Response({"detail": "You are not in this room"}, status=status.HTTP_403_FORBIDDEN)
-        
+        # Serializer responsável por validar e criar a mensagem
         serializer = SendMessageSerializer(data=request.data, context={"user": request.user, "chat_room": chat_room})
         serializer.is_valid(raise_exception=True)
 
-        if not request.data.get("subject"):
+        # Caso não exista message_content, retorna todas as mensagens da sala
+        if not request.data.get("message_content"):
             response_serializer = ShowChatRoomSerializer(chat_room)
             return Response(response_serializer.data)
-
+        # Pega o channel layer do Django Channels
         message = serializer.save()
 
         channel_layer = get_channel_layer()
-
+        # Envia a nova mensagem para todos os clientes conectados via WebSocket
         async_to_sync(channel_layer.group_send)(
             f"chat_{pk}",
             {
