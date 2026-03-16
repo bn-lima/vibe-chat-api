@@ -1,6 +1,4 @@
 from rest_framework import serializers
-
-from accounts import models
 from .models import ChatRoom, ChatMessage
 from .validators import CHAT_ROOM_VALIDATOR
 
@@ -110,8 +108,8 @@ class ShowChatRoomSerializer(serializers.ModelSerializer): # Serializer respons�
         model = ChatRoom
         fields = ("channel_name", "messages",)
 
-class SendMessageSerialzer(serializers.ModelSerializer): # Serializer responsável por criar um objeto mensagem em uma sala específica
-    subject = serializers.CharField(max_length=100, required=False) # Permite que o usuário adicione um assunto à mensagem, mas não é obrigatório
+class SendMessageSerializer(serializers.ModelSerializer): # Serializer responsável por criar um objeto mensagem em uma sala específica
+    message_content = serializers.CharField(max_length=1000, required=False)
     class Meta:
         model = ChatMessage
         exclude = ("channel", "author",)
