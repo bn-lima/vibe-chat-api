@@ -39,7 +39,7 @@ class ChatRoomDetailSerializer(serializers.ModelSerializer):
         exclude = ("room_password", "owner", "members")
 
     def get_owner_name(self, obj):
-        return obj.owner.username # RETORNAR O USERNAME JUNTO DO DISCRIMINATOR DO USUÁRIO DEPOIS
+        return f"{obj.owner.username}{obj.owner.discriminator}"
     
     def get_members_quantity(self, obj):    
         return obj.members.count()
