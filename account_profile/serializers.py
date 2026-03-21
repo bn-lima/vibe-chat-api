@@ -8,3 +8,17 @@ class ProfileDetailSerializer(serializers.ModelSerializer):
 
     def get_username(self, obj):
         return f"{obj.account.username}{obj.account.discriminator}"
+    
+class EditProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        exclude = ("account",)
+
+    def save(self, **kwargs):
+        profile = self.instance
+
+        for key, value in self.validated_data.items():
+            setattr(profile, key, value)
+
+        profile.save()
+        return profile
