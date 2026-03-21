@@ -18,7 +18,7 @@ class Account(AbstractUser):
         return super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.username}#{self.discriminator} - {self.email}" # Representação do usuário
+        return f"{self.username}{self.discriminator} - {self.email}" # Representação do usuário
     
 class ResetToken(models.Model):
     user = models.ForeignKey(Account, on_delete=models.CASCADE) # Usuário dono do token
