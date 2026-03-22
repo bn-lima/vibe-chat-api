@@ -33,6 +33,7 @@ class ChatRoomsSerializer(serializers.ModelSerializer): # Serializer responsáve
     
 class ChatRoomDetailSerializer(serializers.ModelSerializer):
     owner_name = serializers.SerializerMethodField()
+    owner_display_name = serializers.SerializerMethodField()
     members_quantity = serializers.SerializerMethodField()
     class Meta:
         model = ChatRoom
@@ -44,8 +45,11 @@ class ChatRoomDetailSerializer(serializers.ModelSerializer):
     def get_members_quantity(self, obj):    
         return obj.members.count()
     
+    def get_owner_display_name(self, obj):
+        return obj.owner.profile.display_name
+    
 class JoinChatRoomSerializer(serializers.Serializer): # Serializer responsável por verificar se a senha da sala está correta e permitir a entrada do usuário
-    room_password = serializers.CharField(max_length=10, validators=[CHAT_ROOM_VALIDATOR])
+    room_password = serializers.CharField(max_length=10, validators=[CHAT_ROOM_VALIDATOR], required=False)
 
     def validate(self, data):
         chat_room = self.context.get("chat_room")
@@ -101,7 +105,7 @@ class MessagesSerializer(serializers.ModelSerializer):
         exclude = ("channel",)
 
     def get_username(self, obj):
-        return f"{obj.author.username}"
+        return f"{obj.author.profile.display_name or obj.author.username}"
 class ShowChatRoomSerializer(serializers.ModelSerializer): # Serializer responsável por mostrar a sala com todas as mensagens
     messages = MessagesSerializer(many=True, read_only=True) # Usa o serializer MessagesSerializer como campo para mostrar as mensagens da sala
     class Meta:
